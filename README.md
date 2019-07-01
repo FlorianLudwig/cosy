@@ -24,10 +24,12 @@ Current decisions (effecting projects managed with cpa, not just cpa's developem
 
  * py.test to run tests
  * git for version control
+ * type annotations are good
 
 In evaluation:
 
  * pipenv vs [poetry](https://poetry.eustace.io/)
+ * mypy vs pytype
 
 
 Some of them might end up being configurable, some might never be configurable.  Keeping CPA simple might take priority.
