@@ -151,7 +151,7 @@ def publish():
     click.secho("Creating distribution")
     _dist(project)
     click.secho("Uploading")
-    cmd = ["twine", "upload"] + os.listdir("dist")
+    cmd = ["twine", "upload"] + ["dist/" + name for name in os.listdir("dist")]
     run(cmd, capture=False)
 
 
