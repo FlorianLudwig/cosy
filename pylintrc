@@ -1,0 +1,12 @@
+[MESSAGES CONTROL]
+
+disable=
+  missing-docstring,  # is okay, really. [TODO explain why]
+  unused-argument,  # is okay [TODO explain why]
+  no-value-for-parameter,  # results in false positives because of our dependency injection
+  no-member, # checked mypy
+  bad-whitespace,  # checked by black
+
+
+# TODO explain why
+good-names=i,j,k,x,y,t,td,db
