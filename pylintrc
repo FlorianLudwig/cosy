@@ -5,6 +5,7 @@ disable=
   unused-argument,  # is okay [TODO explain why]
   no-value-for-parameter,  # results in false positives because of our dependency injection
   no-member, # checked mypy
+  no-else-return, # see https://github.com/SoCo/SoCo/issues/500#issuecomment-479434951
   bad-whitespace,  # checked by black
 
 
