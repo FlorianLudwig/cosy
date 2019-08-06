@@ -1,0 +1,16 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+click = "*"
+pip = "==18.0"
+tomlkit = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+black = "19.3b0"
+mypy = "*"
+pylint = "*"
