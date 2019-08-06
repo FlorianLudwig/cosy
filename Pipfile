@@ -11,6 +11,6 @@ tomlkit = "*"
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
-black = "19.3b0"
+black = "==19.3b0"
 mypy = "*"
 pylint = "*"
