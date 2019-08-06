@@ -14,7 +14,7 @@ Full life cycle management for python apps and libs.  Create python boilerplate,
 
 The repository contains a **WIP MVP** to evaliuate different technologies, workflows and user interface.  It's quick and dirty.
 
-**Not suited for production work.  User and machine interface are not stable AND WILL CHANGE (and break your stuff).**
+**Not suited for production work.**  Major version zero (0.y.z) is for initial development. Anything may change at any time. The public API should not be considered stable.
 
 
 ## Opinionated
