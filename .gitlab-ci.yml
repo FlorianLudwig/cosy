@@ -1,0 +1,48 @@
+variables:
+  CI_REGISTRY_IMAGE: ''
+  PYTHON_MODULE: 'cpa'
+
+
+stages:
+  - test-project
+  - test
+  - build
+  - dist
+
+
+image: 'greyrook/cde-dev-py37:a355037c12bd7236957a9ab2e2519ada272aac50'
+
+
+before_script:
+  - pipenv --python `which python3`
+  # pipenv and pip 18.1 are not compatible:
+  # avoid https://github.com/pypa/pipenv/issues/2924
+  - pipenv run pip install pip==18.0
+  - pipenv install --dev
+  - pipenv run pip install -e .
+.test_template: &test_def
+  script:
+  - pipenv run py.test --cov ${PYTHON_MODULE} --cov tests --cov-report=html --cov-report=term tests
+
+
+pytest-python3.6:
+  <<: *test_def
+
+  image: 'greyrook/cde-dev-py36:6e1eef7dc9269d32d1e3b0c389050e65f36111bc'
+
+
+pytest-python3.7:
+  <<: *test_def
+
+  coverage: '/\d+\%\s*$/'
+  artifacts:
+    name: "coverage"
+    paths:
+     - htmlcov/
+
+
+linting:
+  stage: test
+  script:
+    - cpa
+
