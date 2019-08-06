@@ -1,0 +1,6 @@
+[tool.cpa]
+name = "cpa"
+version = "0.1.0"
+description = ""
+authors = ["Florian Ludwig <f.ludwig@greyrook.com>"]
+
