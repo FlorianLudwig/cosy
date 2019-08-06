@@ -7,12 +7,14 @@
 
 Full life cycle management for python apps and libs.  Create python boilerplate, develop, update boilerplate and publish.
 
+ * Single point of truth for project parameters
+
 
 ## State
 
 The repository contains a **WIP MVP** to evaliuate different technologies, workflows and user interface.  It's quick and dirty.
 
-**Not suited for production work.**
+**Not suited for production work.  User and machine interface are not stable AND WILL CHANGE (and break your stuff).**
 
 
 ## Opinionated
@@ -25,6 +27,7 @@ Current decisions (effecting projects managed with cpa, not just cpa's developem
  * py.test to run tests
  * git for version control
  * type annotations are good
+ * gitlab ci integration
 
 In evaluation:
 
@@ -34,3 +37,19 @@ In evaluation:
 
 Some of them might end up being configurable, some might never be configurable.  Keeping CPA simple might take priority.
 
+## Usage
+
+```
+Commands:
+  create   create new project
+  dist     create distributables
+  publish  publish to pypi
+  test     run tests
+  update   update current project
+
+```
+
+
+## TODO
+
+ * Explain why
