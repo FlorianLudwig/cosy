@@ -44,5 +44,5 @@ pytest-python3.7:
 linting:
   stage: test
   script:
-    - cpa
+    - create-python-app test
 
