@@ -25,12 +25,6 @@ before_script:
   - pipenv run py.test --cov ${PYTHON_MODULE} --cov tests --cov-report=html --cov-report=term tests
 
 
-pytest-python3.6:
-  <<: *test_def
-
-  image: 'greyrook/cde-dev-py36:6e1eef7dc9269d32d1e3b0c389050e65f36111bc'
-
-
 pytest-python3.7:
   <<: *test_def
 
@@ -44,5 +38,5 @@ pytest-python3.7:
 linting:
   stage: test
   script:
-    - create-python-app test
+    - pipenv run create-python-app test
 
