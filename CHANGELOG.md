@@ -6,6 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 2019-08-06
+## [0.1.0] - 2019-08-06
 
 This is a "release early, release often" release.  The software is still in alpha state.  User api and user interface are not stable.
