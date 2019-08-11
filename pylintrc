@@ -6,8 +6,22 @@ disable=
   no-value-for-parameter,  # results in false positives because of our dependency injection
   no-member, # checked mypy
   no-else-return, # see https://github.com/SoCo/SoCo/issues/500#issuecomment-479434951
-  bad-whitespace,  # checked by black
+  bad-whitespace,  # all style checks are made by black
+  bad-continuation,
 
 
-# TODO explain why
-good-names=i,j,k,x,y,t,td,db
+# TBD:
+ * logging-fstring-interpolation
+ * fixme
+ * protected-access
+ * too-few-public-methods
+
+
+good-names=i,j,x,y,z,t,td,db,f
+# Usage:
+# i,j - iterators
+# x,y,z - coordinates
+# t - time
+# td - time diff / duration
+# db - database
+# f - function
