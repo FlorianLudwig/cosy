@@ -1,4 +1,4 @@
-"""Console script for cpa."""
+"""Console script for create python app."""
 from __future__ import annotations
 
 import sys
