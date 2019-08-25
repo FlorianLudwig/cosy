@@ -1,15 +1,20 @@
 [MESSAGES CONTROL]
 
+# all style checks are made by "black --check" as black is used as
+# formatter to avoid any disagreement between the two.
+# (which does happen quite a bit)
+
 disable=
   missing-docstring,  # is okay, really. [TODO explain why]
   unused-argument,  # is okay [TODO explain why]
-  no-value-for-parameter,  # results in false positives because of our dependency injection
+  no-value-for-parameter,  # results in false positives because of our dependency injection [TODO: maybe switch dependency injection as otherwise this is really useful]
   no-member, # checked mypy
   no-else-return, # see https://github.com/SoCo/SoCo/issues/500#issuecomment-479434951
-  bad-whitespace,  # all style checks are made by black
-  bad-continuation,  # [TODO explain why]
-  fixme,  # TODO's should not break a build
-  protected-access,  # ._id
+  bad-whitespace,  # style check
+  bad-continuation,  # style check
+  fixme,  # should not break a build
+  protected-access,  # Quite a few use cases for this, including in MongoDB ORMs: ._id
+
 
 good-names=i,j,x,y,z,t,td,db,f,fn,fs,ws,cfg
 # Usage:
@@ -27,5 +32,10 @@ good-names=i,j,x,y,z,t,td,db,f,fn,fs,ws,cfg
 
 [DESIGN]
 
-max-locals=20  # increase too-many-locals to 20
-max-returns=8  # increase too-many-return-statements to 8
+# increased from default 15
+max-locals=20
+
+# limiting the number of returns might discourage
+# the use of guard clauses. So we increase the
+# allowed number of returns from 6 to 8
+max-returns=8
