@@ -7,6 +7,7 @@ import subprocess
 import typing
 import shutil
 
+import pkg_resources
 import click
 import tomlkit
 
@@ -43,6 +44,14 @@ class Project:
     def metadata(self) -> dict:
         return self.config["tool"]["cpa"]
 
+    @property
+    def pylintrc(self):
+        project_sepecific_pylintrc = os.path.join(self.path, ".pylintrc")
+        if os.path.exists(project_sepecific_pylintrc):
+            return project_sepecific_pylintrc
+
+        return pkg_resources.resource_filename("cpa", "pylintrc")
+
 
 def run_tests(project: Project) -> int:
     conf = project.metadata()
@@ -51,7 +60,7 @@ def run_tests(project: Project) -> int:
     cmd = ["black", "--check", "."]
     style_res = run(cmd)
 
-    cmd = ["pylint", module]
+    cmd = ["pylint", f"--rcfile={project.pylintrc}", module]
     pylint_res = run(cmd)
 
     cmd = [
