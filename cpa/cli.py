@@ -146,6 +146,7 @@ def _dist(project):
         shutil.rmtree("dist")
 
     click.echo(run(["python", "setup.py", "sdist"]).output)
+    click.echo(run(["python", "setup.py", "bdist_wheel"]).output)
 
 
 @main.command()
