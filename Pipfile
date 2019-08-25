@@ -7,6 +7,7 @@ verify_ssl = true
 click = "*"
 pip = "==18.0"
 tomlkit = "*"
+setuptools = "*"
 
 [dev-packages]
 pytest = "*"
