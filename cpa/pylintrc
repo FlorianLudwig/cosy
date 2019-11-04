@@ -14,6 +14,7 @@ disable=
   bad-continuation,  # style check
   fixme,  # should not break a build
   protected-access,  # Quite a few use cases for this, including in MongoDB ORMs: ._id
+  too-few-public-methods, # TODO explain why
 
 
 good-names=i,j,x,y,z,t,td,db,f,fn,fs,ws,cfg
