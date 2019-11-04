@@ -57,7 +57,8 @@ def run_tests(project: Project) -> int:
     conf = project.metadata()
     module = conf["name"]
 
-    cmd = ["black", "--check", "."]
+    # allow syntax new in python 3.6
+    cmd = ["black", "--check", "--target-version", "py36", "."]
     style_res = run(cmd)
 
     cmd = ["pylint", f"--rcfile={project.pylintrc}", module]
@@ -132,6 +133,7 @@ def dist():
     """create distributables"""
     project = Project.find()
 
+    # TODO ensure project is CLEAN
     _dist(project)
 
 
