@@ -12,6 +12,7 @@ disable=
   no-else-return, # see https://github.com/SoCo/SoCo/issues/500#issuecomment-479434951
   bad-whitespace,  # style check
   bad-continuation,  # style check
+  line-too-long,  # style check
   fixme,  # should not break a build
   protected-access,  # Quite a few use cases for this, including in MongoDB ORMs: ._id
   too-few-public-methods, # TODO explain why
