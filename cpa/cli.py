@@ -110,7 +110,8 @@ def run(cmd, capture=True) -> CommandResult:
 
     if capture:
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        return CommandResult(proc.stdout.read(), proc.wait())
+        assert proc.stdout is not None  # makes mypy happy
+        return CommandResult(proc.stdout.read().decode("utf-8"), proc.wait())
     else:
         proc = subprocess.Popen(cmd)
         return CommandResult("", proc.wait())
