@@ -6,6 +6,7 @@ import os
 import subprocess
 import typing
 import shutil
+import dataclasses
 
 import pkg_resources
 import click
@@ -26,23 +27,45 @@ def find_project_root(path: str = ".") -> str:
     return find_project_root(parent)
 
 
+@dataclasses.dataclass
+class Config:
+    name: str
+    public: bool
+
+
 class Project:
+    pyproject: Optional[tomlkit.document]
+
     def __init__(self, path: str):
         self.path = path
-        config_path = os.path.join(path, "pyproject.toml")
-        self.config = tomlkit.document()
-        if os.path.exists(config_path):
-            with open(config_path) as config_fo:
+        pyproject_path = os.path.join(path, "pyproject.toml")
+
+        if os.path.exists(pyproject_path):
+            tomlkit.document()
+            with open(pyproject_path) as config_fo:
                 config_data = config_fo.read()
-            self.config = tomlkit.loads(config_data)
+            self.pyproject = tomlkit.loads(config_data)
 
     @classmethod
     def find(cls) -> Project:
         path = find_project_root()
         return cls(path)
 
-    def metadata(self) -> dict:
-        return self.config["tool"]["cpa"]
+    def metadata(self) -> Config:
+        name = None
+        public = False
+
+        if self.pyproject:
+            tool = self.pyproject.get("tool", {})
+            name = tool.get("poetry", {}).get("name", None)
+            name = tool.get("cpa", {}).get("name", name)
+            public = tool.get("cpa", {}).get("public", public)
+
+        if name is None:
+            raise AttributeError("Could not determine package name")
+        
+        metadata = Config(name, public)
+        return metadata
 
     @property
     def pylintrc(self):
