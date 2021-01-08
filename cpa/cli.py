@@ -83,10 +83,10 @@ def run_tests(project: Project) -> int:
 
     # allow syntax new in python 3.6
     cmd = ["black", "--check", "--target-version", "py36", "."]
-    style_res = run(cmd)
+    style_res = pipenv_run(cmd)
 
     cmd = ["pylint", f"--rcfile={project.pylintrc}", module]
-    pylint_res = run(cmd)
+    pylint_res = pipenv_run(cmd)
 
     cmd = [
         "mypy",
@@ -96,7 +96,7 @@ def run_tests(project: Project) -> int:
         "--check-untyped-defs",
         module,
     ]
-    mypy_res = run(cmd)
+    mypy_res = pipenv_run(cmd)
 
     ret_code = 0
     if style_res.returncode != 0:
@@ -129,9 +129,12 @@ class CommandResult(typing.NamedTuple):
     returncode: int
 
 
-def run(cmd, capture=True) -> CommandResult:
+def pipenv_run(cmd) -> CommandResult:
     cmd = ["pipenv", "run"] + cmd
+    return run(cmd)
 
+
+def run(cmd, capture=True) -> CommandResult:
     if capture:
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         assert proc.stdout is not None  # makes mypy happy
@@ -145,6 +148,17 @@ def run(cmd, capture=True) -> CommandResult:
 def new():
     """create new project"""
     raise NotImplementedError()
+
+
+@main.command()
+def install():
+    """install dependencies via pipenv/poetry"""
+    project = Project.find()
+    files_in_folder = os.listdir(project.path)
+    if 'Pipfile.lock' in files_in_folder:
+        click.echo(run(["pipenv", "install", "--ignore-pipfile"]))
+    elif 'poetry.lock' in files_in_folder:
+        click.echo(run(["poetry", "install"]))
 
 
 @main.command()
@@ -172,8 +186,8 @@ def _dist(project):
     if os.path.exists("dist"):
         shutil.rmtree("dist")
 
-    click.echo(run(["python", "setup.py", "sdist"]).output)
-    click.echo(run(["python", "setup.py", "bdist_wheel"]).output)
+    click.echo(pipenv_run(["python", "setup.py", "sdist"]).output)
+    click.echo(pipenv_run(["python", "setup.py", "bdist_wheel"]).output)
 
 
 @main.command()
@@ -189,7 +203,7 @@ def publish():
     _dist(project)
     click.secho("Uploading")
     cmd = ["twine", "upload"] + ["dist/" + name for name in os.listdir("dist")]
-    run(cmd, capture=False)
+    pipenv_run(cmd, capture=False)
 
 
 @main.command()
