@@ -7,6 +7,7 @@ import subprocess
 import typing
 import shutil
 import dataclasses
+from typing import Optional
 
 import pkg_resources
 import click
@@ -180,7 +181,7 @@ def publish():
     """publish to pypi"""
     project = Project.find()
 
-    if not project.metadata().get("public", False):
+    if not project.metadata().public:
         click.secho("Project not public.  Not uploading to pypi", fg="red")
         sys.exit(1)
 
