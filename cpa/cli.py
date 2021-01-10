@@ -63,7 +63,7 @@ class Project:
 
         if name is None:
             raise AttributeError("Could not determine package name")
-        
+
         metadata = Config(name, public)
         return metadata
 
@@ -78,7 +78,7 @@ class Project:
 
 def run_tests(project: Project) -> int:
     conf = project.metadata()
-    module = conf["name"]
+    module = conf.name
 
     # allow syntax new in python 3.6
     cmd = ["black", "--check", "--target-version", "py36", "."]

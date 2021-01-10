@@ -7,7 +7,6 @@ import pytest
 
 from click.testing import CliRunner
 
-from cpa import cpa
 from cpa import cli
 
 
