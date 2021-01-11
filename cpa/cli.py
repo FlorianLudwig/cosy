@@ -76,6 +76,13 @@ class Project:
 
         return pkg_resources.resource_filename("cpa", "pylintrc")
 
+    def get_packaging_sys(self) -> str:
+        files_in_folder = os.listdir(self.path)
+        if "Pipfile.lock" in files_in_folder:
+            return "pipenv"
+        elif "poetry.lock" in files_in_folder:
+            return "poetry"
+    
 
 def run_tests(project: Project) -> int:
     conf = project.metadata()
@@ -154,11 +161,11 @@ def new():
 def install():
     """install dependencies via pipenv/poetry"""
     project = Project.find()
-    files_in_folder = os.listdir(project.path)
-    if 'Pipfile.lock' in files_in_folder:
-        click.echo(run(["pipenv", "install", "--ignore-pipfile"]))
-    elif 'poetry.lock' in files_in_folder:
-        click.echo(run(["poetry", "install"]))
+    packaging_sys = project.get_packaging_sys()
+    if packaging_sys == 'pipenv':
+        click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
+    elif pacakaging_sys == 'poetry':
+        click.echo(run(["poetry", "install"]).output)
 
 
 @main.command()
