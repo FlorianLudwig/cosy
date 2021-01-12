@@ -21,7 +21,7 @@ class System(object):
     @classmethod
     def get_current(cls):
         system = distro.linux_distribution()[0]
-        if system == 'fedora':
+        if system == 'Fedora':
             return Fedora()
         else:
             return Ubuntu()

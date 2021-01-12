@@ -8,6 +8,8 @@ WORKDIR /app
 
 COPY Pipfile* ./
 
+RUN pipenv --three --site-packages
+
 RUN pipenv install --dev
 
 COPY . .
