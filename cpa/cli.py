@@ -1,6 +1,7 @@
 """Console script for create python app."""
 from __future__ import annotations
 
+from typing import Set
 import sys
 import os
 import subprocess
@@ -12,6 +13,8 @@ from typing import Optional
 import pkg_resources
 import click
 import tomlkit
+
+import cpa.install
 
 
 def find_project_root(path: str = ".") -> str:
@@ -82,7 +85,28 @@ class Project:
             return "pipenv"
         elif "poetry.lock" in files_in_folder:
             return "poetry"
-    
+
+
+    def python_deps(self) -> Set[str]:
+        packages_list = []
+        packaging_sys = self.get_packaging_sys()
+        if packaging_sys == "pipenv":
+            cmd = ["pip", "freeze"]
+            res = pipenv_run(cmd)
+            packages = set(res.output.splitlines())
+            for package in packages:
+                # skip editable pacakages
+                if package.startswith('-e'):
+                    continue
+                packages_list.append(package.split("==")[0])
+        else:
+            tool = self.pyproject.get("tool", {})
+            deps = tool.get("poetry", {}).get("dependencies", {})
+            dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
+            packages_list = list(deps.keys()) + list(dev_deps.keys())
+
+        return packages_list
+
 
 def run_tests(project: Project) -> int:
     conf = project.metadata()
@@ -166,6 +190,19 @@ def install():
         click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
     elif pacakaging_sys == 'poetry':
         click.echo(run(["poetry", "install"]).output)
+
+
+@main.command()
+def sysdeps():
+    "List all system dependencies required"
+    system = cpa.install.System.get_current()
+    project = Project.find()
+    python_dependencies = project.python_deps()
+    sys_deps = set()
+    for package in python_dependencies:
+        sys_deps.update(system.install_python_pkg_deps(package, install=False))
+    
+    click.echo(f"These system dependencies need to be installed {sys_deps}")
 
 
 @main.command()
