@@ -175,6 +175,17 @@ def run(cmd, capture=True) -> CommandResult:
         return CommandResult("", proc.wait())
 
 
+def project_deps(run_only=False) -> Set[str]:
+    system = cpa.install.System.get_current()
+    project = Project.find()
+    python_dependencies = project.python_deps()
+    sys_deps = set()
+    for package in python_dependencies:
+        deps_to_install = system.python_pkg_deps(package, run_only)
+        sys_deps.update(deps_to_install)
+
+    return sys_deps
+
 @main.command()
 def new():
     """create new project"""
@@ -182,7 +193,8 @@ def new():
 
 
 @main.command()
-def install():
+@click.option("--with-sysdeps", "with_sysdeps",  is_flag=True)
+def install(with_sysdeps):
     """install dependencies via pipenv/poetry"""
     project = Project.find()
     packaging_sys = project.get_packaging_sys()
@@ -190,20 +202,22 @@ def install():
         click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
     elif pacakaging_sys == 'poetry':
         click.echo(run(["poetry", "install"]).output)
+    
+    if with_sysdeps:
+        click.echo("Installing system dependencies..")
+        system = cpa.install.System.get_current()
+        sys_deps = project_deps()
+        system.install(sys_deps)
+        click.echo("Clean up not needed dependencies..")
+        system.cleanup()
+        click.echo('Complete')
 
 
 @main.command()
 @click.option("--run-only", "-r", "run_only",  is_flag=True)
 def sysdeps(run_only):
     "List all system dependencies required"
-    system = cpa.install.System.get_current()
-    project = Project.find()
-    python_dependencies = project.python_deps()
-    sys_deps = set()
-    for package in python_dependencies:
-        deps_to_install = system.install_python_pkg_deps(package, run_only, install=False)
-        sys_deps.update(deps_to_install)
-    
+    sys_deps = project_deps(run_only)
     click.echo(f"These system dependencies need to be installed {sys_deps}")
 
 

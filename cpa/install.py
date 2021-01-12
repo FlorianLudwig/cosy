@@ -26,7 +26,7 @@ class System(object):
         else:
             return Ubuntu()
 
-    def install_python_pkg_deps(self, dep, run_only=False, install=True) -> Set[str]:
+    def python_pkg_deps(self, dep, run_only=False) -> Set[str]:
         stages = ['build', 'run', 'collect']
         build_packages = set()
         run_packages = set()
@@ -44,8 +44,6 @@ class System(object):
         to_install.update(run_packages)
         self.run_packages.update(run_packages)
         self.build_packages.update(build_packages)
-        if to_install and install:
-            self.install(to_install)
         return to_install
 
     def cleanup(self):
