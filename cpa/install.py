@@ -26,7 +26,7 @@ class System(object):
         else:
             return Ubuntu()
 
-    def install_python_pkg_deps(self, dep, install=True) -> Set[str]:
+    def install_python_pkg_deps(self, dep, run_only=False, install=True) -> Set[str]:
         stages = ['build', 'run', 'collect']
         build_packages = set()
         run_packages = set()
@@ -34,9 +34,10 @@ class System(object):
         package = dep.strip().lower()
         if package in PACKAGES and self.name in PACKAGES[package]:
             deps = PACKAGES[package][self.name]
-            build_packages.update(deps.get('collect', []))
-            build_packages.update(deps.get('build', []))
             run_packages.update(deps.get('run', []))
+            if not run_only:
+                build_packages.update(deps.get('collect', []))
+                build_packages.update(deps.get('build', []))
 
         to_install = set(self.build_system)
         to_install.update(build_packages)

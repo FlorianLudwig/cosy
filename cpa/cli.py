@@ -193,14 +193,16 @@ def install():
 
 
 @main.command()
-def sysdeps():
+@click.option("--run-only", "-r", "run_only",  is_flag=True)
+def sysdeps(run_only):
     "List all system dependencies required"
     system = cpa.install.System.get_current()
     project = Project.find()
     python_dependencies = project.python_deps()
     sys_deps = set()
     for package in python_dependencies:
-        sys_deps.update(system.install_python_pkg_deps(package, install=False))
+        deps_to_install = system.install_python_pkg_deps(package, run_only, install=False)
+        sys_deps.update(deps_to_install)
     
     click.echo(f"These system dependencies need to be installed {sys_deps}")
 
