@@ -1,0 +1,53 @@
+'av':
+  'fedora':
+    'build': ['ffmpeg-devel']
+    'collect': ['git']
+    'run': ['ffmpeg']
+
+'Cartopy':
+  'ubuntu':
+    'build': ['libproj-dev', 'libgeos-dev']
+    'run': ['libproj', 'libgeos']
+
+'cairocffi':
+  'fedora':
+    'collect': ['libffi-devel']
+    'run': ['libffi']
+
+'cryptography':
+  'fedora':
+    'build': ['libffi-devel', 'openssl-devel']
+    'run': ['libffi', 'openssl']
+
+'gitpython':
+  'fedora':
+    'run': ['git']
+
+'lxml':
+  'fedora':
+    'build': ['libxml2-devel', 'libxslt-devel']
+    'run': ['libxml2', 'libxslt']
+
+'pillow':
+  'fedora':
+    'build': ['lcms2-devel', 'zlib-devel',
+      'libjpeg-turbo-devel', 'freetype-devel', 'openjpeg2-devel',
+      'libtiff-devel', 'libwebp-devel']
+    'run': ['lcms2', 'zlib', 'libjpeg-turbo',
+      'freetype', 'openjpeg2', 'libtiff',
+      'libwebp']
+  'ubuntu':
+    'build': ['liblcms2-dev', 'liblz-dev',
+      'libjpeg62-turbo-dev', 'libfreetype6-dev',
+      'libtiff5-dev', 'libwebp-dev']
+    'run': ['liblcms2-2']
+
+'pycurl':
+  'fedora':
+    'collect': ['libcurl-devel']
+    'run': ['libcurl']
+
+  'python-lzo':
+    'fedora':
+      'build': ['lzo-devel']
+      'run': ['lzo']

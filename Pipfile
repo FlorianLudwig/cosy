@@ -8,6 +8,8 @@ click = "*"
 pip = "==18.0"
 tomlkit = "*"
 setuptools = "*"
+pyyaml = "==5.3.1"
+distro = "==1.5.0"
 
 [dev-packages]
 pytest = "*"
