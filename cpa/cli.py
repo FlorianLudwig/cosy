@@ -1,14 +1,13 @@
 """Console script for create python app."""
 from __future__ import annotations
 
-from typing import Set
+from typing import Set, Optional
 import sys
 import os
 import subprocess
 import typing
 import shutil
 import dataclasses
-from typing import Optional
 
 import pkg_resources
 import click
@@ -81,12 +80,13 @@ class Project:
 
     def get_packaging_sys(self) -> str:
         """Retruns package management system used"""
+        pkg_sys = ""
         files_in_folder = os.listdir(self.path)
         if "Pipfile.lock" in files_in_folder:
-            return "pipenv"
+            pkg_sys = "pipenv"
         elif "poetry.lock" in files_in_folder:
-            return "poetry"
-
+            pkg_sys = "poetry"
+        return pkg_sys
 
     def python_deps(self) -> Set[str]:
         """Returns a list of python packages usef by pipenv/poetry"""
@@ -98,16 +98,16 @@ class Project:
             packages = set(res.output.splitlines())
             for package in packages:
                 # skip editable pacakages
-                if package.startswith('-e'):
+                if package.startswith("-e"):
                     continue
                 packages_list.append(package.split("==")[0])
-        else:
+        elif packaging_sys == "poetry" and self.pyproject:
             tool = self.pyproject.get("tool", {})
             deps = tool.get("poetry", {}).get("dependencies", {})
             dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
             packages_list = list(deps.keys()) + list(dev_deps.keys())
 
-        return packages_list
+        return set(packages_list)
 
 
 def run_tests(project: Project) -> int:
@@ -162,9 +162,9 @@ class CommandResult(typing.NamedTuple):
     returncode: int
 
 
-def pipenv_run(cmd) -> CommandResult:
+def pipenv_run(cmd, capture=True) -> CommandResult:
     cmd = ["pipenv", "run"] + cmd
-    return run(cmd)
+    return run(cmd, capture)
 
 
 def run(cmd, capture=True) -> CommandResult:
@@ -189,6 +189,7 @@ def project_deps(run_only=False) -> Set[str]:
 
     return sys_deps
 
+
 @main.command()
 def new():
     """create new project"""
@@ -196,7 +197,7 @@ def new():
 
 
 @main.command()
-@click.option("--with-sysdeps", "with_sysdeps",  is_flag=True)
+@click.option("--with-sysdeps", "with_sysdeps", is_flag=True)
 def install(with_sysdeps):
     """install python dependencies via pipenv/poetry, and insall system dependencies"""
     project = Project.find()
@@ -207,17 +208,17 @@ def install(with_sysdeps):
         system.install(sys_deps)
         click.echo("Clean up not needed dependencies..")
         system.cleanup()
-        click.echo('Complete')
+        click.echo("Complete")
 
     packaging_sys = project.get_packaging_sys()
-    if packaging_sys == 'pipenv':
+    if packaging_sys == "pipenv":
         click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
-    elif pacakaging_sys == 'poetry':
+    elif packaging_sys == "poetry":
         click.echo(run(["poetry", "install"]).output)
 
 
 @main.command()
-@click.option("--run-only", "-r", "run_only",  is_flag=True)
+@click.option("--run-only", "-r", "run_only", is_flag=True)
 def sysdeps(run_only):
     """List all system dependencies required by project's python packages"""
     sys_deps = project_deps(run_only)
