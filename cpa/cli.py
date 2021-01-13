@@ -200,12 +200,6 @@ def new():
 def install(with_sysdeps):
     """install python dependencies via pipenv/poetry, and insall system dependencies"""
     project = Project.find()
-    packaging_sys = project.get_packaging_sys()
-    if packaging_sys == 'pipenv':
-        click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
-    elif pacakaging_sys == 'poetry':
-        click.echo(run(["poetry", "install"]).output)
-    
     if with_sysdeps:
         click.echo("Installing system dependencies..")
         system = cpa.install.System.get_current()
@@ -214,6 +208,12 @@ def install(with_sysdeps):
         click.echo("Clean up not needed dependencies..")
         system.cleanup()
         click.echo('Complete')
+
+    packaging_sys = project.get_packaging_sys()
+    if packaging_sys == 'pipenv':
+        click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
+    elif pacakaging_sys == 'poetry':
+        click.echo(run(["poetry", "install"]).output)
 
 
 @main.command()
