@@ -27,6 +27,7 @@ class System(object):
             return Ubuntu()
 
     def python_pkg_deps(self, dep, run_only=False) -> Set[str]:
+        """Get all system dependencies for a certain python package"""
         stages = ['build', 'run', 'collect']
         build_packages = set()
         run_packages = set()
@@ -47,6 +48,7 @@ class System(object):
         return to_install
 
     def cleanup(self):
+        """Remove not needed dependencies"""
         to_remove = self.build_packages.union(self.build_system)
         to_keep = self.initial_packages.union(self.run_packages)
 

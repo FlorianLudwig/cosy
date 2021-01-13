@@ -80,6 +80,7 @@ class Project:
         return pkg_resources.resource_filename("cpa", "pylintrc")
 
     def get_packaging_sys(self) -> str:
+        """Retruns package management system used"""
         files_in_folder = os.listdir(self.path)
         if "Pipfile.lock" in files_in_folder:
             return "pipenv"
@@ -88,6 +89,7 @@ class Project:
 
 
     def python_deps(self) -> Set[str]:
+        """Returns a list of python packages usef by pipenv/poetry"""
         packages_list = []
         packaging_sys = self.get_packaging_sys()
         if packaging_sys == "pipenv":
@@ -176,6 +178,7 @@ def run(cmd, capture=True) -> CommandResult:
 
 
 def project_deps(run_only=False) -> Set[str]:
+    """Returns a set of all system dependencies required by python packages"""
     system = cpa.install.System.get_current()
     project = Project.find()
     python_dependencies = project.python_deps()
@@ -195,7 +198,7 @@ def new():
 @main.command()
 @click.option("--with-sysdeps", "with_sysdeps",  is_flag=True)
 def install(with_sysdeps):
-    """install dependencies via pipenv/poetry"""
+    """install python dependencies via pipenv/poetry, and insall system dependencies"""
     project = Project.find()
     packaging_sys = project.get_packaging_sys()
     if packaging_sys == 'pipenv':
@@ -216,7 +219,7 @@ def install(with_sysdeps):
 @main.command()
 @click.option("--run-only", "-r", "run_only",  is_flag=True)
 def sysdeps(run_only):
-    "List all system dependencies required"
+    """List all system dependencies required by project's python packages"""
     sys_deps = project_deps(run_only)
     click.echo(f"These system dependencies need to be installed {sys_deps}")
 
