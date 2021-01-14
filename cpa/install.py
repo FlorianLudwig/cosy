@@ -61,11 +61,28 @@ class System:
 
     def install(self, packages):
         """install given packages"""
-        raise NotImplementedError()
+        if isinstance(self, Fedora):
+            cmd = ["dnf", "install", "-y"]
+        elif isinstance(self, Ubuntu):
+            cmd = ["apt", "install", "-y"]
+
+        for pkg in packages:
+            # if pkg not in self.installed_packages:
+            cmd.append(pkg)
+
+        if packages:
+            subprocess.Popen(cmd).wait()
 
     def remove(self, packages):
         """remove packages if not already installed on pip startup"""
-        raise NotImplementedError()
+        if isinstance(self, Fedora):
+            cmd = ["dnf", "remove", "-y"]
+        elif isinstance(self, Ubuntu):
+            cmd = ["apt", "remove", "-y"]
+
+        if packages:
+            cmd = cmd + list(packages)
+            subprocess.Popen(cmd).wait()
 
 
 class Fedora(System):
@@ -93,17 +110,6 @@ class Fedora(System):
         installed = self.base.sack.query().installed()
         self.installed_packages = set(p.name for p in installed.run())
 
-    def install(self, packages):
-        """install packages by calling dnf as subprocess"""
-        cmd = ["dnf", "install", "-y"]
-
-        for pkg in packages:
-            # if pkg not in self.installed_packages:
-            cmd.append(pkg)
-
-        if packages:
-            subprocess.Popen(cmd).wait()
-
     def install_api(self, packages):
         """install packages using the dnf python api
 
@@ -121,12 +127,6 @@ class Fedora(System):
             self.base.download_packages(self.base.transaction.install_set)
             self.base.do_transaction()
             self._get_dnf()
-
-    def remove(self, packages):
-        """remove packages by calling dnf as subprocess"""
-        if packages:
-            cmd = ["dnf", "remove", "-y"] + list(packages)
-            subprocess.Popen(cmd).wait()
 
     def remove_api(self, packages):
         """using dnf-python
@@ -149,8 +149,22 @@ class Ubuntu(System):
     build_system = ["build-essential"]
     name = "ubuntu"
 
-    def install(self, packages):
-        raise NotImplementedError()
+    def __init__(self):
+        super().__init__()
 
-    def remove(self, packages):
-        raise NotImplementedError()
+        self.set_installed_packages()
+        self.initial_packages = self.installed_packages
+
+    def set_installed_packages(self):
+        cmd = ["apt", "list", "--installed"]
+
+        proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        assert proc.stdout
+        outs = proc.stdout.read().decode("utf-8").splitlines()
+        deps_list = []
+        for dependency in outs:
+            if "/" not in dependency:
+                continue
+            deps_list.append(dependency.split("/")[0])
+
+        self.installed_packages = set(deps_list)
