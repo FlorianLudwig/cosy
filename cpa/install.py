@@ -125,7 +125,7 @@ class Fedora(System):
     def remove(self, packages):
         """remove packages by calling dnf as subprocess"""
         if packages:
-            cmd = ["dnf", "remove"] + list(packages)
+            cmd = ["dnf", "remove", "-y"] + list(packages)
             subprocess.Popen(cmd).wait()
 
     def remove_api(self, packages):

@@ -48,11 +48,22 @@ class Project:
             with open(pyproject_path) as config_fo:
                 config_data = config_fo.read()
             self.pyproject = tomlkit.loads(config_data)
+    
+    @classmethod
+    def get_project_instance(cls, path):
+        files_in_folder = os.listdir(path)
+        if "Pipfile.lock" in files_in_folder:
+            return PipenvProject
+        elif "poetry.lock" in files_in_folder:
+            return PoetryProject
+        else:
+           raise ValueError("unable to detect python project type")
 
     @classmethod
     def find(cls) -> Project:
         path = find_project_root()
-        return cls(path)
+        project = cls.get_project_instance(path)
+        return project(path)
 
     def metadata(self) -> Config:
         name = None
@@ -77,36 +88,71 @@ class Project:
             return project_sepecific_pylintrc
 
         return pkg_resources.resource_filename("cpa", "pylintrc")
+    
+    def _run(self, cmd, capture=True) -> CommandResult:
+        if capture:
+            proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+            assert proc.stdout is not None  # makes mypy happy
+            return CommandResult(proc.stdout.read().decode("utf-8"), proc.wait())
+        else:
+            proc = subprocess.Popen(cmd)
+            return CommandResult("", proc.wait())
 
-    def get_packaging_sys(self) -> str:
-        """Retruns package management system used"""
-        pkg_sys = ""
-        files_in_folder = os.listdir(self.path)
-        if "Pipfile.lock" in files_in_folder:
-            pkg_sys = "pipenv"
-        elif "poetry.lock" in files_in_folder:
-            pkg_sys = "poetry"
-        return pkg_sys
+    def install(self):
+        """Install python packages"""
+        raise NotImplementedError()
 
-    def python_deps(self) -> Set[str]:
-        """Returns a list of python packages usef by pipenv/poetry"""
+    def get_packages_list(self) -> Set[str]:
+        """Returns a list of python packages used by pipenv/poetry"""
+        raise NotImplementedError()
+
+
+class PipenvProject(Project):
+    def __init__(self, path):
+        super().__init__(path)
+
+    def run(self, cmd, capture=True) -> CommandResult:
+        cmd = ["pipenv", "run"] + cmd
+        return self._run(cmd, capture)
+    
+    def install(self) -> CommandResult:
+        """Install python packages"""
+        cmd = ["pipenv", "install", "--ignore-pipfile"]
+        return self._run(cmd)
+    
+    def get_packages_list(self) -> Set[str]:
+        """Returns a list of python packages used by pipenv"""
         packages_list = []
-        packaging_sys = self.get_packaging_sys()
-        if packaging_sys == "pipenv":
-            cmd = ["pip", "freeze"]
-            res = pipenv_run(cmd)
-            packages = set(res.output.splitlines())
-            for package in packages:
-                # skip editable pacakages
-                if package.startswith("-e"):
-                    continue
-                packages_list.append(package.split("==")[0])
-        elif packaging_sys == "poetry" and self.pyproject:
-            tool = self.pyproject.get("tool", {})
-            deps = tool.get("poetry", {}).get("dependencies", {})
-            dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
-            packages_list = list(deps.keys()) + list(dev_deps.keys())
+        cmd = ["pip", "freeze"]
+        res = self.run(cmd)
+        packages = res.output.splitlines()
+        for package in packages:
+            # skip editable pacakages
+            if package.startswith("-e"):
+                continue
+            packages_list.append(package.split("==")[0])
+        return set(packages_list)
 
+class PoetryProject(Project):
+    def __init__(self, path):
+        super.__init__(path)
+    
+    def run(self, cmd, capture=True) -> CommandResult:
+        cmd = ["poetry", "run"] + cmd
+        return self._run(cmd, capture)
+    
+    def install(self) -> CommandResult:
+        """Install python packages"""
+        cmd = ["poetry", "install"]
+        return self._run(cmd)
+    
+    def get_packages_list(self) -> Set[str]:
+        """Returns a list of python packages used by poetry"""
+        packages_list = []
+        tool = self.pyproject.get("tool", {})
+        deps = tool.get("poetry", {}).get("dependencies", {})
+        dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
+        packages_list = list(deps.keys()) + list(dev_deps.keys())
         return set(packages_list)
 
 
@@ -116,10 +162,10 @@ def run_tests(project: Project) -> int:
 
     # allow syntax new in python 3.6
     cmd = ["black", "--check", "--target-version", "py36", "."]
-    style_res = pipenv_run(cmd)
+    style_res = project.run(cmd)
 
     cmd = ["pylint", f"--rcfile={project.pylintrc}", module]
-    pylint_res = pipenv_run(cmd)
+    pylint_res = project.run(cmd)
 
     cmd = [
         "mypy",
@@ -129,7 +175,7 @@ def run_tests(project: Project) -> int:
         "--check-untyped-defs",
         module,
     ]
-    mypy_res = pipenv_run(cmd)
+    mypy_res = project.run(cmd)
 
     ret_code = 0
     if style_res.returncode != 0:
@@ -162,11 +208,6 @@ class CommandResult(typing.NamedTuple):
     returncode: int
 
 
-def pipenv_run(cmd, capture=True) -> CommandResult:
-    cmd = ["pipenv", "run"] + cmd
-    return run(cmd, capture)
-
-
 def run(cmd, capture=True) -> CommandResult:
     if capture:
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
@@ -177,11 +218,10 @@ def run(cmd, capture=True) -> CommandResult:
         return CommandResult("", proc.wait())
 
 
-def project_deps(run_only=False) -> Set[str]:
+def project_deps(project: Project, run_only: bool=False) -> Set[str]:
     """Returns a set of all system dependencies required by python packages"""
     system = cpa.install.System.get_current()
-    project = Project.find()
-    python_dependencies = project.python_deps()
+    python_dependencies = project.get_packages_list()
     sys_deps = set()
     for package in python_dependencies:
         deps_to_install = system.python_pkg_deps(package, run_only)
@@ -204,24 +244,20 @@ def install(with_sysdeps):
     if with_sysdeps:
         click.echo("Installing system dependencies..")
         system = cpa.install.System.get_current()
-        sys_deps = project_deps()
+        sys_deps = project_deps(project)
         system.install(sys_deps)
         click.echo("Clean up not needed dependencies..")
         system.cleanup()
         click.echo("Complete")
-
-    packaging_sys = project.get_packaging_sys()
-    if packaging_sys == "pipenv":
-        click.echo(run(["pipenv", "install", "--ignore-pipfile"]).output)
-    elif packaging_sys == "poetry":
-        click.echo(run(["poetry", "install"]).output)
+    click.echo(project.install().output)
 
 
 @main.command()
 @click.option("--run-only", "-r", "run_only", is_flag=True)
 def sysdeps(run_only):
     """List all system dependencies required by project's python packages"""
-    sys_deps = project_deps(run_only)
+    project = Project.find()
+    sys_deps = project_deps(project, run_only)
     click.echo(f"These system dependencies need to be installed {sys_deps}")
 
 
@@ -250,8 +286,8 @@ def _dist(project):
     if os.path.exists("dist"):
         shutil.rmtree("dist")
 
-    click.echo(pipenv_run(["python", "setup.py", "sdist"]).output)
-    click.echo(pipenv_run(["python", "setup.py", "bdist_wheel"]).output)
+    click.echo(project.run(["python", "setup.py", "sdist"]).output)
+    click.echo(project.run(["python", "setup.py", "bdist_wheel"]).output)
 
 
 @main.command()
@@ -267,7 +303,7 @@ def publish():
     _dist(project)
     click.secho("Uploading")
     cmd = ["twine", "upload"] + ["dist/" + name for name in os.listdir("dist")]
-    pipenv_run(cmd, capture=False)
+    project.run(cmd, capture=False)
 
 
 @main.command()
