@@ -152,10 +152,10 @@ class Ubuntu(System):
     def __init__(self):
         super().__init__()
 
-        self.set_installed_packages()
+        self.load_installed_packages()
         self.initial_packages = self.installed_packages
 
-    def set_installed_packages(self):
+    def load_installed_packages(self):
         cmd = ["apt", "list", "--installed"]
 
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
