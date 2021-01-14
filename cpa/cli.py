@@ -8,6 +8,7 @@ import subprocess
 import typing
 import shutil
 import dataclasses
+import configparser
 
 import pkg_resources
 import click
@@ -116,14 +117,14 @@ class PipenvProject(Project):
     def get_packages_list(self) -> Set[str]:
         """Returns a list of python packages used by pipenv"""
         packages_list = []
-        cmd = ["pip", "freeze"]
-        res = self.run(cmd)
-        packages = res.output.splitlines()
-        for package in packages:
-            # skip editable pacakages
-            if package.startswith("-e"):
-                continue
-            packages_list.append(package.split("==")[0])
+        parser = configparser.ConfigParser()
+        parser.read(os.path.join(self.path, "Pipfile"))
+
+        for pkg in parser["packages"]:
+            packages_list.append(pkg)
+        for pkg in parser["dev-packages"]:
+            packages_list.append(pkg)
+
         return set(packages_list)
 
 
