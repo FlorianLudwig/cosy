@@ -48,7 +48,7 @@ class Project:
             with open(pyproject_path) as config_fo:
                 config_data = config_fo.read()
             self.pyproject = tomlkit.loads(config_data)
-    
+
     @classmethod
     def get_project_instance(cls, path):
         files_in_folder = os.listdir(path)
@@ -57,7 +57,7 @@ class Project:
         elif "poetry.lock" in files_in_folder:
             return PoetryProject
         else:
-           raise ValueError("unable to detect python project type")
+            raise ValueError("unable to detect python project type")
 
     @classmethod
     def find(cls) -> Project:
@@ -88,17 +88,12 @@ class Project:
             return project_sepecific_pylintrc
 
         return pkg_resources.resource_filename("cpa", "pylintrc")
-    
-    def _run(self, cmd, capture=True) -> CommandResult:
-        if capture:
-            proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-            assert proc.stdout is not None  # makes mypy happy
-            return CommandResult(proc.stdout.read().decode("utf-8"), proc.wait())
-        else:
-            proc = subprocess.Popen(cmd)
-            return CommandResult("", proc.wait())
 
-    def install(self):
+    def run(self, cmd, capture=True) -> CommandResult:
+        """Run commands in a subprocess"""
+        raise NotImplementedError()
+
+    def install(self) -> CommandResult:
         """Install python packages"""
         raise NotImplementedError()
 
@@ -108,18 +103,16 @@ class Project:
 
 
 class PipenvProject(Project):
-    def __init__(self, path):
-        super().__init__(path)
-
     def run(self, cmd, capture=True) -> CommandResult:
+        """Run commands in a subprocess"""
         cmd = ["pipenv", "run"] + cmd
-        return self._run(cmd, capture)
-    
+        return run(cmd, capture)
+
     def install(self) -> CommandResult:
         """Install python packages"""
         cmd = ["pipenv", "install", "--ignore-pipfile"]
-        return self._run(cmd)
-    
+        return run(cmd)
+
     def get_packages_list(self) -> Set[str]:
         """Returns a list of python packages used by pipenv"""
         packages_list = []
@@ -133,22 +126,22 @@ class PipenvProject(Project):
             packages_list.append(package.split("==")[0])
         return set(packages_list)
 
+
 class PoetryProject(Project):
-    def __init__(self, path):
-        super.__init__(path)
-    
     def run(self, cmd, capture=True) -> CommandResult:
+        """Run commands in a subprocess"""
         cmd = ["poetry", "run"] + cmd
-        return self._run(cmd, capture)
-    
+        return run(cmd, capture)
+
     def install(self) -> CommandResult:
         """Install python packages"""
         cmd = ["poetry", "install"]
-        return self._run(cmd)
-    
+        return run(cmd)
+
     def get_packages_list(self) -> Set[str]:
         """Returns a list of python packages used by poetry"""
         packages_list = []
+        assert self.pyproject
         tool = self.pyproject.get("tool", {})
         deps = tool.get("poetry", {}).get("dependencies", {})
         dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
@@ -218,7 +211,7 @@ def run(cmd, capture=True) -> CommandResult:
         return CommandResult("", proc.wait())
 
 
-def project_deps(project: Project, run_only: bool=False) -> Set[str]:
+def project_deps(project: Project, run_only: bool = False) -> Set[str]:
     """Returns a set of all system dependencies required by python packages"""
     system = cpa.install.System.get_current()
     python_dependencies = project.get_packages_list()
