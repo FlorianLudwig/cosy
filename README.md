@@ -1,7 +1,12 @@
+![MIT licensed](https://img.shields.io/github/license/FlorianLudwig/cpa?style=flat-square)
+![Python Version](https://img.shields.io/pypi/pyversions/cpa?style=flat-square)
+![supports python wheel](https://img.shields.io/pypi/wheel/cpa?style=flat-square )
+[![PyPI](https://img.shields.io/pypi/v/cpa?style=flat-square)](https://pypi.org/project/cpa/)
+
+
 # Create Python App
 
  * refered as CPA
- * Free software: Apache Software License 2.0
 
 ## Goal
 
