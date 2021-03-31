@@ -29,18 +29,18 @@ used libraries.
 
 Current decisions (effecting projects managed with cpa, not just cpa's developemt itself):
 
- * py.test to run tests
+ * `py.test` to run tests
  * git for version control
  * type annotations are good
  * gitlab ci integration
+ * `mypy` (`pytype` to be evaluated)
 
-In evaluation:
+Limited configurablility in other places:
 
- * pipenv vs [poetry](https://poetry.eustace.io/)
- * mypy vs pytype
+ * `pipenv` an [poetry](https://poetry.eustace.io/)
 
-
-Some of them might end up being configurable, some might never be configurable.  Keeping CPA simple might take priority.
+Some of them might end up being configurable, some might never be configurable.
+Keeping CPA simple might take priority.
 
 ## Usage
 
