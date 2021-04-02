@@ -11,10 +11,10 @@ public = true
 
 [tool.poetry.dependencies]
 python = "^3.7"
-click = "^7.1.2"
 tomlkit = "^0.7.0"
 PyYAML = "^5.4.1"
 distro = "^1.5.0"
+typer = "^0.3.2"
 
 
 [tool.poetry.dev-dependencies]

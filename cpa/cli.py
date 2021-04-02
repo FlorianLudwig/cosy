@@ -1,15 +1,17 @@
 """Console script for create python app."""
 from __future__ import annotations
+import subprocess
 
 from typing import Set
 import sys
 import os
 import shutil
-
-import click
+from distro import name
+import typer
 
 import cpa.install
 import cpa.project
+import cpa.cli_sysdeps
 
 
 def run_tests(project: cpa.project.Base) -> int:
@@ -35,80 +37,49 @@ def run_tests(project: cpa.project.Base) -> int:
 
     ret_code = 0
     if style_res.returncode != 0:
-        click.echo(f"== style check failed with code {style_res.returncode} ==")
-        click.echo(style_res.output)
+        typer.echo(f"== style check failed with code {style_res.returncode} ==")
+        typer.echo(style_res.output)
         ret_code = ret_code | 1
 
     if pylint_res.returncode != 0:
-        click.echo(f"== pylint failed with code {pylint_res.returncode} ==")
-        click.echo(pylint_res.output)
+        typer.echo(f"== pylint failed with code {pylint_res.returncode} ==")
+        typer.echo(pylint_res.output)
         ret_code = ret_code | 2
 
     if mypy_res.returncode != 0:
-        click.echo(f"== mypy failed with code {mypy_res.returncode} ==")
-        click.echo(mypy_res.output)
+        typer.echo(f"== mypy failed with code {mypy_res.returncode} ==")
+        typer.echo(mypy_res.output)
         ret_code = ret_code | 4
 
     return ret_code
 
 
-@click.group()
-def main(args=None):
-    """Console script for cpa."""
-
-    return 0
+app = typer.Typer()
+app.add_typer(cpa.cli_sysdeps.app, name="sysdeps")
 
 
-def project_deps(project: cpa.project.Base, run_only: bool = False) -> Set[str]:
-    """Returns a set of all system dependencies required by python packages"""
-    system = cpa.install.System.get_current()
-    python_dependencies = project.get_packages_list()
-    sys_deps = set()
-    for package in python_dependencies:
-        deps_to_install = system.python_pkg_deps(package, run_only)
-        sys_deps.update(deps_to_install)
-
-    return sys_deps
-
-
-@main.command()
-def new():
-    """create new project"""
-    raise NotImplementedError()
-
-
-@main.command()
-@click.option("--with-sysdeps", "with_sysdeps", is_flag=True)
-def install(with_sysdeps):
+@app.command()
+def install(
+    with_sysdeps: bool = typer.Option(
+        False,
+        "--with-sysdeps",
+        help="automatically install needed system dependencies (with dnf/apt)",
+    )
+):
     """install python dependencies via pipenv/poetry, and insall system dependencies"""
     project = cpa.project.find()
     if with_sysdeps:
-        click.echo("Installing system dependencies..")
+        typer.echo("Installing system dependencies..")
         system = cpa.install.System.get_current()
-        sys_deps = project_deps(project)
+        sys_deps = cpa.cli_sysdeps.project_deps(project)
         system.install(sys_deps)
-        click.echo("Clean up not needed dependencies..")
+        typer.echo("Clean up not needed dependencies..")
         system.cleanup()
-        click.echo("Complete")
-    click.echo(project.install().output)
+        typer.echo("Complete")
+    typer.echo(project.install().output)
 
 
-@main.command()
-@click.option("--run-only", "-r", "run_only", is_flag=True)
-def sysdeps(run_only):
-    """List all system dependencies required by project's python packages"""
-    project = cpa.project.find()
-    sys_deps = project_deps(project, run_only)
-    click.echo(f"These system dependencies need to be installed {sys_deps}")
-
-
-@main.command()
-def update():
-    """update current project"""
-    raise NotImplementedError()
-
-
-@main.command()
+@app.command()
 def dist():
     """create distributables"""
     project = cpa.project.find()
@@ -120,34 +91,34 @@ def dist():
 def _dist(project):
     test_result_code = run_tests(project)
     if test_result_code != 0:
-        click.secho("Not creating dist due to failing tests", fg="red")
+        typer.secho("Not creating dist due to failing tests", fg="red")
         sys.exit(test_result_code)
 
     os.chdir(project.path)
     if os.path.exists("dist"):
         shutil.rmtree("dist")
 
-    click.echo(project.run(["python", "setup.py", "sdist"]).output)
-    click.echo(project.run(["python", "setup.py", "bdist_wheel"]).output)
+    typer.echo(project.run(["python", "setup.py", "sdist"]).output)
+    typer.echo(project.run(["python", "setup.py", "bdist_wheel"]).output)
 
 
-@main.command()
+@app.command()
 def publish():
     """publish to pypi"""
     project = cpa.project.find()
 
     if not project.metadata().public:
-        click.secho("Project not public.  Not uploading to pypi", fg="red")
+        typer.secho("Project not public.  Not uploading to pypi", fg="red")
         sys.exit(1)
 
-    click.secho("Creating distribution")
+    typer.secho("Creating distribution")
     _dist(project)
-    click.secho("Uploading")
+    typer.secho("Uploading")
     cmd = ["twine", "upload"] + ["dist/" + name for name in os.listdir("dist")]
     project.run(cmd, capture=False)
 
 
-@main.command()
+@app.command()
 def test() -> None:
     """run tests"""
     project = cpa.project.find()
@@ -155,5 +126,9 @@ def test() -> None:
     sys.exit(ret_code)
 
 
+def main():
+    app()
+
+
 if __name__ == "__main__":
-    sys.exit(main())  # pragma: no cover
+    app()  # pragma: no cover
