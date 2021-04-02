@@ -37,7 +37,7 @@ Current decisions (effecting projects managed with cpa, not just cpa's developem
 
 Limited configurablility in other places:
 
- * `pipenv` an [poetry](https://poetry.eustace.io/)
+ * `pipenv` and [poetry](https://poetry.eustace.io/)
 
 Some of them might end up being configurable, some might never be configurable.
 Keeping CPA simple might take priority.
@@ -51,7 +51,6 @@ Commands:
   publish  publish to pypi
   test     run tests
   update   update current project
-
 ```
 
 
