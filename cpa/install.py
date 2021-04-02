@@ -159,6 +159,7 @@ class Ubuntu(System):
         cmd = ["apt", "list", "--installed"]
 
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        assert proc.stdout is not None  # make mypy happy
         outs = proc.stdout.read().decode("utf-8").splitlines()
         deps_list = []
         for dependency in outs:
