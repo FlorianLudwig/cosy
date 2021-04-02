@@ -1,6 +1,32 @@
-[tool.cpa]
+[tool.poetry]
 name = "cpa"
-version = "0.1.0"
+version = "0.4.1"
 description = ""
+license = "Apache-2.0"
 authors = ["Florian Ludwig <f.ludwig@greyrook.com>"]
+homepage = "https://github.com/FlorianLudwig/cpa"
+
+[tool.cpa]
 public = true
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "^7.1.2"
+tomlkit = "^0.7.0"
+PyYAML = "^5.4.1"
+distro = "^1.5.0"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.2"
+pytest-cov = "^2.11.1"
+black = "^20.8b1"
+mypy = "^0.812"
+pylint = "^2.7.4"
+
+[tool.poetry.scripts]
+create-python-app = 'cpa.cli:main'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
