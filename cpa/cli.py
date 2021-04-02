@@ -1,156 +1,18 @@
 """Console script for create python app."""
 from __future__ import annotations
 
-from typing import Set, Optional
+from typing import Set
 import sys
 import os
-import subprocess
-import typing
 import shutil
-import dataclasses
-import configparser
 
-import pkg_resources
 import click
-import tomlkit
 
 import cpa.install
+import cpa.project
 
 
-def find_project_root(path: str = ".") -> str:
-    path = os.path.abspath(path)
-    files_in_folder = os.listdir(path)
-    if ".git" in files_in_folder or "pyproject.toml" in files_in_folder:
-        return path
-
-    parent = os.path.join(path, os.path.pardir)
-    parent = os.path.abspath(parent)
-    if parent == path:
-        raise AttributeError("project root not found")
-
-    return find_project_root(parent)
-
-
-@dataclasses.dataclass
-class Config:
-    name: str
-    public: bool
-
-
-class Project:
-    pyproject: Optional[tomlkit.document]
-
-    def __init__(self, path: str):
-        self.path = path
-        pyproject_path = os.path.join(path, "pyproject.toml")
-
-        if os.path.exists(pyproject_path):
-            tomlkit.document()
-            with open(pyproject_path) as config_fo:
-                config_data = config_fo.read()
-            self.pyproject = tomlkit.loads(config_data)
-
-    @classmethod
-    def get_project_instance(cls, path):
-        files_in_folder = os.listdir(path)
-        if "Pipfile.lock" in files_in_folder:
-            return PipenvProject
-        elif "poetry.lock" in files_in_folder:
-            return PoetryProject
-        else:
-            raise ValueError("unable to detect python project type")
-
-    @classmethod
-    def find(cls) -> Project:
-        path = find_project_root()
-        project = cls.get_project_instance(path)
-        return project(path)
-
-    def metadata(self) -> Config:
-        name = None
-        public = False
-
-        if self.pyproject:
-            tool = self.pyproject.get("tool", {})
-            name = tool.get("poetry", {}).get("name", None)
-            name = tool.get("cpa", {}).get("name", name)
-            public = tool.get("cpa", {}).get("public", public)
-
-        if name is None:
-            raise AttributeError("Could not determine package name")
-
-        metadata = Config(name, public)
-        return metadata
-
-    @property
-    def pylintrc(self):
-        project_sepecific_pylintrc = os.path.join(self.path, ".pylintrc")
-        if os.path.exists(project_sepecific_pylintrc):
-            return project_sepecific_pylintrc
-
-        return pkg_resources.resource_filename("cpa", "pylintrc")
-
-    def run(self, cmd, capture=True) -> CommandResult:
-        """Run commands in a subprocess"""
-        raise NotImplementedError()
-
-    def install(self) -> CommandResult:
-        """Install python packages"""
-        raise NotImplementedError()
-
-    def get_packages_list(self) -> Set[str]:
-        """Returns a list of python packages used by pipenv/poetry"""
-        raise NotImplementedError()
-
-
-class PipenvProject(Project):
-    def run(self, cmd, capture=True) -> CommandResult:
-        """Run commands in a subprocess"""
-        cmd = ["pipenv", "run"] + cmd
-        return run(cmd, capture)
-
-    def install(self) -> CommandResult:
-        """Install python packages"""
-        cmd = ["pipenv", "install", "--ignore-pipfile"]
-        return run(cmd)
-
-    def get_packages_list(self) -> Set[str]:
-        """Returns a list of python packages used by pipenv"""
-        packages_list = []
-        parser = configparser.ConfigParser()
-        parser.read(os.path.join(self.path, "Pipfile"))
-
-        for pkg in parser["packages"]:
-            packages_list.append(pkg)
-        for pkg in parser["dev-packages"]:
-            packages_list.append(pkg)
-
-        return set(packages_list)
-
-
-class PoetryProject(Project):
-    def run(self, cmd, capture=True) -> CommandResult:
-        """Run commands in a subprocess"""
-        cmd = ["poetry", "run"] + cmd
-        return run(cmd, capture)
-
-    def install(self) -> CommandResult:
-        """Install python packages"""
-        cmd = ["poetry", "install"]
-        return run(cmd)
-
-    def get_packages_list(self) -> Set[str]:
-        """Returns a list of python packages used by poetry"""
-        packages_list = []
-        assert self.pyproject
-        tool = self.pyproject.get("tool", {})
-        deps = tool.get("poetry", {}).get("dependencies", {})
-        dev_deps = tool.get("poetry", {}).get("dev-dependencies", {})
-        packages_list = list(deps.keys()) + list(dev_deps.keys())
-        return set(packages_list)
-
-
-def run_tests(project: Project) -> int:
+def run_tests(project: cpa.project.Base) -> int:
     conf = project.metadata()
     module = conf.name
 
@@ -158,7 +20,7 @@ def run_tests(project: Project) -> int:
     cmd = ["black", "--check", "--target-version", "py36", "."]
     style_res = project.run(cmd)
 
-    cmd = ["pylint", f"--rcfile={project.pylintrc}", module]
+    cmd = ["pylint", f"--rcfile={project.data.pylintrc_path}", module]
     pylint_res = project.run(cmd)
 
     cmd = [
@@ -197,22 +59,7 @@ def main(args=None):
     return 0
 
 
-class CommandResult(typing.NamedTuple):
-    output: str
-    returncode: int
-
-
-def run(cmd, capture=True) -> CommandResult:
-    if capture:
-        proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        assert proc.stdout is not None  # makes mypy happy
-        return CommandResult(proc.stdout.read().decode("utf-8"), proc.wait())
-    else:
-        proc = subprocess.Popen(cmd)
-        return CommandResult("", proc.wait())
-
-
-def project_deps(project: Project, run_only: bool = False) -> Set[str]:
+def project_deps(project: cpa.project.Base, run_only: bool = False) -> Set[str]:
     """Returns a set of all system dependencies required by python packages"""
     system = cpa.install.System.get_current()
     python_dependencies = project.get_packages_list()
@@ -234,7 +81,7 @@ def new():
 @click.option("--with-sysdeps", "with_sysdeps", is_flag=True)
 def install(with_sysdeps):
     """install python dependencies via pipenv/poetry, and insall system dependencies"""
-    project = Project.find()
+    project = cpa.project.find()
     if with_sysdeps:
         click.echo("Installing system dependencies..")
         system = cpa.install.System.get_current()
@@ -250,7 +97,7 @@ def install(with_sysdeps):
 @click.option("--run-only", "-r", "run_only", is_flag=True)
 def sysdeps(run_only):
     """List all system dependencies required by project's python packages"""
-    project = Project.find()
+    project = cpa.project.find()
     sys_deps = project_deps(project, run_only)
     click.echo(f"These system dependencies need to be installed {sys_deps}")
 
@@ -264,7 +111,7 @@ def update():
 @main.command()
 def dist():
     """create distributables"""
-    project = Project.find()
+    project = cpa.project.find()
 
     # TODO ensure project is CLEAN
     _dist(project)
@@ -287,7 +134,7 @@ def _dist(project):
 @main.command()
 def publish():
     """publish to pypi"""
-    project = Project.find()
+    project = cpa.project.find()
 
     if not project.metadata().public:
         click.secho("Project not public.  Not uploading to pypi", fg="red")
@@ -303,7 +150,7 @@ def publish():
 @main.command()
 def test() -> None:
     """run tests"""
-    project = Project.find()
+    project = cpa.project.find()
     ret_code = run_tests(project)
     sys.exit(ret_code)
 
