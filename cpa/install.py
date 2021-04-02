@@ -1,8 +1,8 @@
 from typing import Set, List
 import logging
 import subprocess
-import distro
 
+import distro
 import yaml
 import pkg_resources
 
@@ -159,7 +159,6 @@ class Ubuntu(System):
         cmd = ["apt", "list", "--installed"]
 
         proc = subprocess.Popen(cmd, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        assert proc.stdout
         outs = proc.stdout.read().decode("utf-8").splitlines()
         deps_list = []
         for dependency in outs:
