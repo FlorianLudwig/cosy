@@ -4,10 +4,11 @@ All notable changes to are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0]
 
 ### Added
- * use poetry name if available
+ * use poetry name entry from pyproject.toml if available
+ * New name "cosy" instead of "cpa"
 
 ## [0.4.1] - 2019-08-06
 
