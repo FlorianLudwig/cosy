@@ -12,6 +12,7 @@ import typer
 import cosy.install
 import cosy.project
 import cosy.cli_sysdeps
+import cosy.cli_skel
 
 
 def run_tests(project: cosy.project.Base) -> int:
@@ -56,6 +57,7 @@ def run_tests(project: cosy.project.Base) -> int:
 
 app = typer.Typer()
 app.add_typer(cosy.cli_sysdeps.app, name="sysdeps")
+app.add_typer(cosy.cli_skel.app, name="skel")
 
 
 @app.command()
