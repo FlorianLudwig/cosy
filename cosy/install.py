@@ -8,7 +8,7 @@ import pkg_resources
 
 logger = logging.getLogger(__name__)
 
-PACKAGE_DATA_PATH = pkg_resources.resource_filename("cpa", "packages.yml")
+PACKAGE_DATA_PATH = pkg_resources.resource_filename("cosy", "packages.yml")
 PACKAGES = yaml.safe_load(open(PACKAGE_DATA_PATH))
 
 

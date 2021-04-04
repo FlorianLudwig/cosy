@@ -1,10 +1,10 @@
-![MIT licensed](https://img.shields.io/github/license/FlorianLudwig/cpa?style=flat-square)
-![Python Version](https://img.shields.io/pypi/pyversions/cpa?style=flat-square)
-![supports python wheel](https://img.shields.io/pypi/wheel/cpa?style=flat-square )
-[![PyPI](https://img.shields.io/pypi/v/cpa?style=flat-square)](https://pypi.org/project/cpa/)
+![MIT licensed](https://img.shields.io/github/license/FlorianLudwig/cosy?style=flat-square)
+![Python Version](https://img.shields.io/pypi/pyversions/cosy?style=flat-square)
+![supports python wheel](https://img.shields.io/pypi/wheel/cosy?style=flat-square )
+[![PyPI](https://img.shields.io/pypi/v/cosy?style=flat-square)](https://pypi.org/project/cosy/)
 
 
-# Create Python App
+# Cosy - Code With Style Project Management CLI
 
  * refered as CPA
 

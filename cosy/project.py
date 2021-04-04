@@ -76,7 +76,7 @@ class ProjectData:
         if project_sepecific_pylintrc.is_file():
             return project_sepecific_pylintrc
 
-        return pathlib.Path(pkg_resources.resource_filename("cpa", "pylintrc"))
+        return pathlib.Path(pkg_resources.resource_filename("cosy", "pylintrc"))
 
 
 @dataclasses.dataclass
@@ -100,8 +100,8 @@ class Base:
         if self.data.pyproject:
             tool = self.data.pyproject.get("tool", {})
             name = tool.get("poetry", {}).get("name", None)
-            name = tool.get("cpa", {}).get("name", name)
-            public = tool.get("cpa", {}).get("public", public)
+            name = tool.get("cosy", {}).get("name", name)
+            public = tool.get("cosy", {}).get("public", public)
 
         if name is None:
             raise AttributeError("Could not determine package name")

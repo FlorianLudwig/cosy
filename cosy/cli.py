@@ -9,12 +9,12 @@ import shutil
 from distro import name
 import typer
 
-import cpa.install
-import cpa.project
-import cpa.cli_sysdeps
+import cosy.install
+import cosy.project
+import cosy.cli_sysdeps
 
 
-def run_tests(project: cpa.project.Base) -> int:
+def run_tests(project: cosy.project.Base) -> int:
     conf = project.metadata()
     module = conf.name
 
@@ -55,7 +55,7 @@ def run_tests(project: cpa.project.Base) -> int:
 
 
 app = typer.Typer()
-app.add_typer(cpa.cli_sysdeps.app, name="sysdeps")
+app.add_typer(cosy.cli_sysdeps.app, name="sysdeps")
 
 
 @app.command()
@@ -67,11 +67,11 @@ def install(
     )
 ):
     """install python dependencies via pipenv/poetry, and insall system dependencies"""
-    project = cpa.project.find()
+    project = cosy.project.find()
     if with_sysdeps:
         typer.echo("Installing system dependencies..")
-        system = cpa.install.System.get_current()
-        sys_deps = cpa.cli_sysdeps.project_deps(project)
+        system = cosy.install.System.get_current()
+        sys_deps = cosy.cli_sysdeps.project_deps(project)
         system.install(sys_deps)
         typer.echo("Clean up not needed dependencies..")
         system.cleanup()
@@ -82,7 +82,7 @@ def install(
 @app.command()
 def dist():
     """create distributables"""
-    project = cpa.project.find()
+    project = cosy.project.find()
 
     # TODO ensure project is CLEAN
     _dist(project)
@@ -105,7 +105,7 @@ def _dist(project):
 @app.command()
 def publish():
     """publish to pypi"""
-    project = cpa.project.find()
+    project = cosy.project.find()
 
     if not project.metadata().public:
         typer.secho("Project not public.  Not uploading to pypi", fg="red")
@@ -121,7 +121,7 @@ def publish():
 @app.command()
 def test() -> None:
     """run tests"""
-    project = cpa.project.find()
+    project = cosy.project.find()
     ret_code = run_tests(project)
     sys.exit(ret_code)
 
