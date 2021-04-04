@@ -47,7 +47,7 @@ def get_instance(path) -> Base:
 
 
 class ProjectData:
-    pyproject: Optional[tomlkit.document] = None
+    pyproject: tomlkit.document | None = None
 
     def __init__(self, path: pathlib.Path) -> None:
         self.path = path
@@ -117,7 +117,7 @@ class Base:
         """Install python packages"""
         raise NotImplementedError()
 
-    def get_packages_list(self) -> Set[str]:
+    def get_packages_list(self) -> set[str]:
         """Returns a list of python packages used by pipenv/poetry"""
         raise NotImplementedError()
 
@@ -155,7 +155,7 @@ class Pipenv(Base):
         cmd = ["pipenv", "install", "--ignore-pipfile"]
         return run(cmd)
 
-    def get_packages_list(self) -> Set[str]:
+    def get_packages_list(self) -> set[str]:
         """Returns a list of python packages used by pipenv"""
         packages_list = []
         parser = configparser.ConfigParser()
@@ -195,7 +195,7 @@ class Poetry(Base):
         cmd = ["poetry", "install"]
         return run(cmd)
 
-    def get_packages_list(self) -> Set[str]:
+    def get_packages_list(self) -> set[str]:
         """Returns a list of python packages used by poetry"""
         packages_list = []
         assert self.data.pyproject
